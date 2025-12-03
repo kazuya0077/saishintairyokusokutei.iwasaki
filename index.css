@@ -1,0 +1,86 @@
+:root {
+  color-scheme: light; /* 強制ライトモード */
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* 入力フィールドの背景色を白に固定 */
+input, select, textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* フェードインアニメーション */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* 印刷用の調整 */
+@media print {
+  @page { margin: 0; size: auto; }
+  body {
+    margin: 0;
+    background-color: white;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: #f8fafc; /* slate-50 相当 */
+  color: #0f172a;            /* slate-900 相当 */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* 入力フィールドの背景は白で固定 */
+input,
+select,
+textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* ふわっと出てくるアニメーション */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* 印刷時の設定 */
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  body {
+    margin: 0;
+    background-color: #ffffff;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
