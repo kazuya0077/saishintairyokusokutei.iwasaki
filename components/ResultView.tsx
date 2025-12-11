@@ -41,17 +41,13 @@ export const ResultView: React.FC<Props> = ({ data, onReset }) => {
     return `border border-slate-300 p-3 text-center font-bold text-lg ${baseBg}`;
   };
 
-  // PDF生成の共通処理
-  // mode: 'save' (ダウンロード) | 'preview' (別タブ表示)
-  const handleGeneratePDF = async (mode: 'save' | 'preview') => {
+  // 内部用：PDFのBase64文字列を生成する関数
+  const generatePdfBase64 = async (): Promise<string | null> => {
     const input = document.getElementById('print-template');
-    if (!input) return;
-
-    setPdfStatus('generating');
+    if (!input) return null;
 
     try {
       // 1. 隠し原稿をCanvas化
-      // iOS Safari等のメモリ制限対策として、scaleを少し調整する手もあるが今回は2で維持
       const canvas = await html2canvas(input, {
         scale: 2, 
         logging: false,
@@ -68,12 +64,43 @@ export const ResultView: React.FC<Props> = ({ data, onReset }) => {
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      
+      // datauristring形式 ("data:application/pdf;base64,JVBER...") からBase64部分のみ抽出
+      const dataUri = pdf.output('datauristring');
+      return dataUri.split(',')[1];
+      
+    } catch (error) {
+      console.error('PDF generation for GAS failed', error);
+      return null;
+    }
+  };
+
+  // PDF生成の共通処理
+  // mode: 'save' (ダウンロード) | 'preview' (別タブ表示)
+  const handleGeneratePDF = async (mode: 'save' | 'preview') => {
+    const input = document.getElementById('print-template');
+    if (!input) return;
+
+    setPdfStatus('generating');
+
+    try {
+      const canvas = await html2canvas(input, {
+        scale: 2, 
+        logging: false,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
       if (mode === 'save') {
-        // PC向け：直接ダウンロード
         pdf.save(`体力測定結果_${data.patient.name}様.pdf`);
       } else {
-        // スマホ向け：BlobURLを生成して別タブで開く
         const blob = pdf.output('blob');
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
@@ -89,7 +116,9 @@ export const ResultView: React.FC<Props> = ({ data, onReset }) => {
 
   const handleSaveGAS = async () => {
     setSaveStatus('saving');
-    const success = await submitToGAS(data, risk);
+    // PDFも生成して送信データに含める
+    const pdfBase64 = await generatePdfBase64();
+    const success = await submitToGAS(data, risk, pdfBase64);
     setSaveStatus(success ? 'success' : 'error');
   };
 
@@ -133,7 +162,7 @@ export const ResultView: React.FC<Props> = ({ data, onReset }) => {
             </button>
           </div>
           <p className="text-right text-xs text-slate-500">
-            ※スマホの方は「PDFプレビュー」を開き、ブラウザの共有メニューから保存やLINE送信を行ってください。
+            ※「データ記録」を押すと、結果データとPDFファイルがクラウド(Google Drive)に保存されます。
           </p>
         </div>
 

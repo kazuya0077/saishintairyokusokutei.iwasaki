@@ -2,7 +2,7 @@
 import { AssessmentData, RiskResult, AgeGroup } from './types';
 
 // GASのWebアプリURLを設定してください
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwiH-SVsyAdpkN1C9wy_Ny_97KCmoVdkUwOmPMSF-etNluQPDNRdEQkUKiq28wufgzWbw/exec'; 
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwvXbtzKjGnF6Xy3LWsRVm8Uswa97OR7ixdGhNer_3D5TOK9ntUqj-hmeDq9VLKnOTeQw/exec'; 
 
 // ■ 年代区分判定
 const getAgeGroup = (age: number): AgeGroup => {
@@ -208,12 +208,13 @@ export const calculateRisk = (data: AssessmentData): RiskResult => {
   };
 };
 
-export const submitToGAS = async (data: AssessmentData, riskResult: RiskResult): Promise<boolean> => {
+export const submitToGAS = async (data: AssessmentData, riskResult: RiskResult, pdfBase64?: string | null): Promise<boolean> => {
   if (GAS_API_URL.includes('YOUR_GAS')) {
     console.warn('GAS URL not configured');
     return false;
   }
 
+  // 送信ペイロードの作成
   const payload = {
     date: new Date().toISOString(),
     company: data.patient.company,
@@ -225,7 +226,8 @@ export const submitToGAS = async (data: AssessmentData, riskResult: RiskResult):
     bestCS30: riskResult.bestRecord.cs30,
     bestBalance: riskResult.bestRecord.balance,
     bestFFD: riskResult.bestRecord.ffd,
-    flags: riskResult.messages.join(' | ')
+    flags: riskResult.messages.join(' | '),
+    pdfData: pdfBase64 || "" // PDFデータ(Base64)を追加
   };
 
   try {
